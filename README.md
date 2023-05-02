@@ -17,7 +17,9 @@ In the process, we will explore a few more things that can be done with forms, G
 However, as our codebase grows, it is becoming essential to reorganize our codebase before we ambitiously aim to nearly double its size.
 
 ### (7.0.1) REORGNIZATION (PART 1/3) Using external SQL files. 
+
 ### (7.0.2) REORGNIZATION (PART 2/3) Using partials. 
+
 ### (7.0.3) REORGNIZATION (PART 3/3) Using Routers. 
 
 ## (7.1) The big picture for CRUD operations

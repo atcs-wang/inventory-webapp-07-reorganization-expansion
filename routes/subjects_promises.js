@@ -1,7 +1,7 @@
 const DEBUG = true;
 
 const express = require('express')
-const db = require('../db/db_pool');
+const db = require('../db/db_pool_promise');
 const fs = require("fs");
 const path = require("path");
 
@@ -12,15 +12,15 @@ const read_subjects_all_alphabetical_sql = fs.readFileSync(path.join(__dirname, 
     {encoding : "UTF-8"});
 
 subjectsRouter.get('/', (req, res) => {
-    db.execute(read_subjects_all_alphabetical_sql, [req.oidc.user.sub], (error, results) => {
-        if (DEBUG)
-            console.log(error ? error : results);
-        if (error)
-            res.status(500).send(error); //Internal Server Error
-        else {
-            res.render("subjects", {subjectlist: results});
-        }
-    });
+    let queryPromise = db.execute(read_subjects_all_alphabetical_sql, [req.oidc.user.sub]);
+    queryPromise.then( ( [results, fields] ) => {
+        if (DEBUG) console.log(results);
+        res.render("subjects", {subjectlist: results});
+    })
+    .catch( (error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
+    })
 });
 
 const create_subject_sql = fs.readFileSync(path.join(__dirname, "..", 

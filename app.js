@@ -61,9 +61,13 @@ app.get( "/", ( req, res ) => {
 } );
 
 let assignmentsRouter = require("./routes/assignments.js");
+// let assignmentsRouter = require("./routes/assignments_promise.js");
+// let assignmentsRouter = require("./routes/assignments_async_await.js");
 app.use("/assignments", requiresAuth(), assignmentsRouter);
 
 let subjectsRouter = require("./routes/subjects.js");
+// let subjectsRouter = require("./routes/subjects_promise.js");
+// let subjectsRouter = require("./routes/subjects_async_await.js");
 app.use("/subjects", requiresAuth(), subjectsRouter);
 
 

@@ -17,7 +17,7 @@ const read_assignments_all_sql = fs.readFileSync(path.join(__dirname, "..",
                                     {encoding : "UTF-8"});
 
 assignmentsRouter.get("/",  ( req, res ) => {
-    
+
     db.execute(read_assignments_all_sql, [req.oidc.user.sub], (error, results) => {
         if (DEBUG)
             console.log(error ? error : results);
@@ -48,7 +48,6 @@ assignmentsRouter.get("/",  ( req, res ) => {
         }
     });
 });
-
 // define a route for the assignment detail page
 const read_assignment_detail_sql = fs.readFileSync(path.join(__dirname, "..", 
     "db", "queries", "crud", "read_assignment_detail.sql"),

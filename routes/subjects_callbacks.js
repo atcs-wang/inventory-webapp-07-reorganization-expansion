@@ -12,7 +12,8 @@ const read_subjects_all_alphabetical_sql = fs.readFileSync(path.join(__dirname, 
     {encoding : "UTF-8"});
 
 subjectsRouter.get('/', (req, res) => {
-    db.execute(read_subjects_all_alphabetical_sql, [req.oidc.user.sub], (error, results) => {
+    db.execute(read_subjects_all_alphabetical_sql, 
+        [req.oidc.user.sub], (error, results) => {
         if (DEBUG)
             console.log(error ? error : results);
         if (error)
