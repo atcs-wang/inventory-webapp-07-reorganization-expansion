@@ -112,7 +112,7 @@ const update_assignment_sql = fs.readFileSync(path.join(__dirname, "..",
                                 {encoding : "UTF-8"});
 
 assignmentsRouter.post("/:id", ( req, res ) => {
-    db.execute(update_assignment_sql, [req.body.title, req.body.quantity, req.body.subject, req.body.dueDate, req.body.description, req.params.id], (error, results) => {
+    db.execute(update_assignment_sql, [req.body.title, req.body.priority, req.body.subject, req.body.dueDate, req.body.description, req.params.id], (error, results) => {
         if (DEBUG)
             console.log(error ? error : results);
         if (error)
