@@ -44,7 +44,7 @@ const delete_subject_sql = fs.readFileSync(path.join(__dirname, "..",
     "db", "queries", "crud", "delete_subject.sql"),
     {encoding : "UTF-8"});
 
-subjectsRouter.get("/subjects/:id/delete", (req, res) => {
+subjectsRouter.get("/:id/delete", (req, res) => {
     db.execute(delete_subject_sql, [req.params.id, req.oidc.user.sub], (error, results) => {
         if (DEBUG)
             console.log(error ? error : results);

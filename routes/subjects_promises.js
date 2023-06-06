@@ -20,7 +20,7 @@ subjectsRouter.get('/', (req, res) => {
     .catch( (error) => {
         if (DEBUG) console.log(error);
         res.status(500).send(error); //Internal Server Error
-    })
+    });
 });
 
 const create_subject_sql = fs.readFileSync(path.join(__dirname, "..", 
@@ -28,14 +28,14 @@ const create_subject_sql = fs.readFileSync(path.join(__dirname, "..",
     {encoding : "UTF-8"});
 
 subjectsRouter.post('/', (req, res) => {
-    db.execute(create_subject_sql, [req.body.subjectName, req.oidc.user.sub], (error, results) =>{
-        if (DEBUG)
-            console.log(error ? error : results);
-        if (error)
-            res.status(500).send(error); //Internal Server Error
-        else {
-            res.redirect("/subjects");
-        }
+    db.execute(create_subject_sql, [req.body.subjectName, req.oidc.user.sub])
+    .then( ( [results, fields] ) => {
+        if (DEBUG) console.log(results);
+        res.redirect("/subjects");
+    })
+    .catch( (error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
     });
 });
 
@@ -43,22 +43,20 @@ const delete_subject_sql = fs.readFileSync(path.join(__dirname, "..",
     "db", "queries", "crud", "delete_subject.sql"),
     {encoding : "UTF-8"});
 
-subjectsRouter.get("/subjects/:id/delete", (req, res) => {
-    db.execute(delete_subject_sql, [req.params.id, req.oidc.user.sub], (error, results) => {
-        if (DEBUG)
-            console.log(error ? error : results);
-        if (error){
+subjectsRouter.get("/:id/delete", (req, res) => {
+    db.execute(delete_subject_sql, [req.params.id, req.oidc.user.sub])
+    .then(([results, fields]) => {
+        if (DEBUG) console.log(results);
+        res.redirect("/subjects");
+    }).catch((error) => {
+        if (DEBUG) console.log(error);
+        if (error.code == "ER_ROW_IS_REFERENCED_2"){
             //special error if any assignments associated with the subject
-            if (error.code == "ER_ROW_IS_REFERENCED_2"){
-                res.status(500).send("There are assignments still associated with that subject!")
-            }
-            else 
-                res.status(500).send(error); //Internal Server Error
+            res.status(500).send("There are assignments still associated with that subject!")
         }
-        else {
-            res.redirect("/subjects");
-        }
-    })
-})
+        else 
+            res.status(500).send(error); //Internal Server Error    
+    });
+});
 
 module.exports = subjectsRouter;

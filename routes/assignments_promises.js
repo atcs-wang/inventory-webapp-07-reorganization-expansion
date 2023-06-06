@@ -21,17 +21,17 @@ assignmentsRouter.get("/", (req, res) => {
     let readSubjectsPromise = db.execute(read_subjects_all_sql, [req.oidc.user.sub]);
 
     Promise.all([readAssignmentsPromise, readSubjectsPromise])
-        .then(([ [results, fields], [results2, fields2]]) => {
-            if (DEBUG) {
-                console.log(results);
-                console.log(results2);
-            }
-            let data = { hwlist: results, subjectlist: results2 }; // results is still an array, get first (only) element
-            res.render('assignments', data);
-        }).catch((error) => {
-            if (DEBUG) console.log(error);
-            res.status(500).send(error); //Internal Server Error
-        });
+    .then(([ [results, fields], [results2, fields2]]) => {
+        if (DEBUG) {
+            console.log(results);
+            console.log(results2);
+        }
+        let data = { hwlist: results, subjectlist: results2 }; // results is still an array, get first (only) element
+        res.render('assignments', data);
+    }).catch((error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
+    });
     // What's passed to the rendered view: 
     //  hwlist: [
     //     { assignmentId: __ , title: __ , priority: __ , subjectName: __ , subjectId: __ ,  dueDateFormatted: __ },
@@ -52,37 +52,36 @@ const read_assignment_detail_sql = fs.readFileSync(path.join(__dirname, "..",
     { encoding: "UTF-8" });
 
 assignmentsRouter.get("/:id", (req, res) => {
-    db.execute(read_assignment_detail_sql, [req.params.id, req.oidc.user.sub], (error, results) => {
-        if (DEBUG)
-            console.log(error ? error : results);
-        if (error)
-            res.status(500).send(error); //Internal Server Error
-        else if (results.length == 0)
-            res.status(404).send(`No assignment found with id = "${req.params.id}"`); // NOT FOUND
-        else {
-            //make second follow up query before responding
-            db.execute(read_subjects_all_sql, [req.oidc.user.sub], (error2, results2) => {
-                if (DEBUG)
-                    console.log(error2 ? error2 : results2);
-                if (error2)
-                    res.status(500).send(error2); //Internal Server Error
-                else {
-                    let data = { hw: results[0], subjectlist: results2 }; // results is still an array, get first (only) element
-                    res.render('detail', data);
-                    // What's passed to the rendered view: 
-                    //  hw: { id: ___ , title: ___ , priority: ___ , 
-                    //    subject: ___ , dueDateExtended: ___ , 
-                    //    dueDateYMD: ___ , description: ___ 
-                    //  }
-                    //  subjectlist : [
-                    //     {subjectId: ___, subjectName: ___}, ...
-                    //  ]
-                    //  
-
-                }
-            });
+    let readAssignmentDetailPromise = db.execute(read_assignment_detail_sql, [req.params.id, req.oidc.user.sub]);
+    let readSubjectsPromise = db.execute(read_subjects_all_sql, [req.oidc.user.sub]);
+    Promise.all([readAssignmentDetailPromise, readSubjectsPromise])
+    .then(([ [results, fields], [results2, fields2]]) => {
+        if (DEBUG) {
+            console.log(results);
+            console.log(results2);
         }
+        if (results.length == 0)
+            res.status(404).send(`No assignment found with id = "${req.params.id}"` ); // NOT FOUND
+        else {
+            let data = { hw: results[0], subjectlist: results2 }; // results is still an array, get first (only) element
+            res.render('detail', data);    
+        }
+    })
+    .catch((error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
     });
+    // What's passed to the rendered view: 
+    //  hw: { id: ___ , title: ___ , priority: ___ , 
+    //    subject: ___ , dueDateExtended: ___ , 
+    //    dueDateYMD: ___ , description: ___ 
+    //  }
+    //  subjectlist : [
+    //     {subjectId: ___, subjectName: ___}, ...
+    //  ]
+    //  
+
+    
 });
 
 
@@ -95,15 +94,14 @@ assignmentsRouter.post("/", (req, res) => {
     db.execute(create_assignment_sql,
         [req.body.title, req.body.priority, req.body.subject,
         req.body.dueDate, req.oidc.user.sub])
-        .then((results) => {
-            if (DEBUG)
-                console.log(results);
-            //results.insertId has the primary key (assignmentId) of the newly inserted row.
-            res.redirect(`/assignments/${results.insertId}`);
-        }).catch((error) => {
-            if (DEBUG) console.log(error);
-            res.status(500).send(error); //Internal Server Error
-        });
+    .then(([results, fields]) => {
+        if (DEBUG) console.log(results);
+        //results.insertId has the primary key (assignmentId) of the newly inserted row.
+        res.redirect(`/assignments/${results.insertId}`);
+    }).catch((error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
+    });
 
 });
 
@@ -113,14 +111,14 @@ const update_assignment_sql = fs.readFileSync(path.join(__dirname, "..",
     { encoding: "UTF-8" });
 
 assignmentsRouter.post("/:id", (req, res) => {
-    db.execute(update_assignment_sql, [req.body.title, req.body.quantity, req.body.subject, req.body.dueDate, req.body.description, req.params.id], (error, results) => {
-        if (DEBUG)
-            console.log(error ? error : results);
-        if (error)
-            res.status(500).send(error); //Internal Server Error
-        else {
-            res.redirect(`/assignments/${req.params.id}`);
-        }
+    db.execute(update_assignment_sql, 
+        [req.body.title, req.body.quantity, req.body.subject, req.body.dueDate, req.body.description, req.params.id])
+    .then(([results, fields]) => {
+        if (DEBUG) console.log(results);
+        res.redirect(`/assignments/${req.params.id}`);
+    }).catch((error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
     });
 });
 
@@ -131,14 +129,13 @@ const delete_assignment_sql = fs.readFileSync(path.join(__dirname, "..",
 
 
 assignmentsRouter.get("/:id/delete", (req, res) => {
-    db.execute(delete_assignment_sql, [req.params.id, req.oidc.user.sub], (error, results) => {
-        if (DEBUG)
-            console.log(error ? error : results);
-        if (error)
-            res.status(500).send(error); //Internal Server Error
-        else {
-            res.redirect("/assignments");
-        }
+    db.execute(delete_assignment_sql, [req.params.id, req.oidc.user.sub])
+    .then(([results, fields]) => {
+        if (DEBUG) console.log(results);
+        res.redirect(`/assignments`);
+    }).catch((error) => {
+        if (DEBUG) console.log(error);
+        res.status(500).send(error); //Internal Server Error
     });
 });
 

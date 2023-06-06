@@ -18,9 +18,23 @@ However, as our codebase grows, it is becoming essential to reorganize our codeb
 
 ### (7.0.1) REORGNIZATION (PART 1/3) Using external SQL files. 
 
+
+See files in `db/queries/`
+
+
+
 ### (7.0.2) REORGNIZATION (PART 2/3) Using partials. 
 
+See the file `views/partials/navbar`, and how other `views/` files have:
+```js
+    <%- include('partials/navbar') %>
+```
+
+Partials are incredibly flexible, and can even be parameterized. SEe 
+
 ### (7.0.3) REORGNIZATION (PART 3/3) Using Routers. 
+
+
 
 ## (7.1) The big picture for CRUD operations
 
@@ -150,8 +164,55 @@ The `subjects` query looks like this:
 ## (7.3) READ subject + hw list
 
 
-## (7.4)  More Improvements to pages (links)
+## (7.4)  Using Promises
+
+# TODO
+
+Callbacks often produce ugly nesting formats ("callback hell").
+
+Promises can be used instead to handle asynchronous operations in a more readable fashion than callbacks. They are fundamentally equivalent, but can be easier to work with once you understand them.
+
+See `db_pool_promise.js` compared to `db_pool.js`, which simply changes to use the built-in "promisified" API of the mysql2 library.
+
+Here's the main idea. In the promisified API for the mysql connection/pool, `db.execute` no longer takes a callback as a parameter, but instead returns a Promise object - representing the eventual success or failure of the intended operation. 
+
+Then, two *separate* callback functions can be attached to that promise object, handling the results or error separately. 
+
+Promises have a bit more going on than that - there can be operations chained to results, and can also be combined in and/or ways - but the basic idea can be seen below in this pseudocode:
+
+```js
+//using callbacks...
+
+db.execute(sql, [params], (error, results, fields) => {
+    //handle error, or results (and fields)
+})
+
+//using promises...
+
+let promise = db.execute(sql, [params]);
+promise.then( ([results, fields]) => {
+    //handle results (and fields)
+}).catch( (error) => {
+    //handle error 
+});
+
+```
 
 
-## (7.5) Adding a "search" feature (form GET, query parameters)
+Note that what actually gets returned for a success is an array with 2 things - the `results`, and another value called `fields`. the `fields` parameter for the callback version of `execute` is optional, and we have not been using it thus far. 
 
+Promises can alternatively be used with *async-await* syntax to really make code feel more like normal synchronous code. 
+
+
+See differences between 
+- assignments_callbacks.js
+- assignments_promises.js
+- assignments_async_await.js
+
+and 
+
+- subjects_callbacks.js
+- subjects_promises.js
+- subjects_async_await.js
+
+Note the use of Promise.all() in some of the routes, which combines multiple queries into a single Promise that can be handled more cleanly than using nested callbacks.
