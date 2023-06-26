@@ -9,10 +9,21 @@ const { auth } = require('express-openid-connect');
 const { requiresAuth } = require('express-openid-connect');
 const dotenv = require('dotenv');
 dotenv.config();
-const db = require('./db/db_connection');
+const helmet = require("helmet");
+const db = require('./db/db_pool');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
+//Configure Express to use certain HTTP headers for security
+//Explicitly set the CSP to allow the source of Materialize
+app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", 'cdnjs.cloudflare.com']
+      }
+    }
+  })); 
 // Configure Express to use EJS
 app.set( "views",  path.join(__dirname , "views"));
 app.set( "view engine", "ejs" );
